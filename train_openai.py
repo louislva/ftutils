@@ -1,12 +1,16 @@
 import openai, os, time, argparse
 from src.conversation import Conversation, Dataset
+import tiktoken
 
+encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-instruct")
 def estimate_tokens(path):
     tokens = 0
     dataset = Dataset.from_file(path)
     for conversation in dataset.conversations:
         for message in conversation.messages:
-            tokens += 2 + (len(message.content) / 4)
+            tokens += 2 # every message has 2 special tokens
+            tokens += len(encoding.encode(message.content)) # correct way
+            # tokens += len(message.content) / 4 # fast way
     return int(tokens)
 
 if __name__ == '__main__':
