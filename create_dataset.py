@@ -6,7 +6,8 @@ def list_files(dir):
     r = []
     for root, dirs, files in os.walk(dir):
         for name in files:
-            r.append(os.path.join(root, name))
+            if name != "base.txt":
+                r.append(os.path.join(root, name))
     return r
 
 
@@ -21,6 +22,6 @@ if __name__ == "__main__":
     paths = []
     for input in args.input:
         paths.extend(list_files(f"{root_dir}/conversations/{input}"))
-        
+
     dataset = Dataset([Conversation.from_file(path) for path in paths])
     dataset.to_file(f"{root_dir}/{args.output}")

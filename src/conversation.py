@@ -3,6 +3,7 @@ from openai.types.chat import ChatCompletionMessage
 import re
 from typing import Literal, Optional
 import json
+import os
 client = OpenAI()
 
 class Message:
@@ -41,7 +42,7 @@ class Conversation:
         self.messages = messages
 
     @staticmethod
-    def from_text(text: str, extra_roles: list[str] = []):
+    def from_text(text: str, extra_roles: list[str] = [], default_system = None):
         regex_start_message = re.compile("\n\n(" + "|".join(["user", "assistant", "system"] + extra_roles) + "): ")
 
         # Find every message index, with the regex
@@ -54,10 +55,19 @@ class Conversation:
 
         # Parse as Message objects
         messages = [Message.from_text(text[start:end]) for start, end in zip(split_indicies, split_indicies[1:] + [len(text)])]
+        
+        # If no system, add default
+        if default_system is not None and not any(msg.role == "system" for msg in messages):
+            messages = [Message("system", default_system)] + messages
+
         return Conversation(messages)
     @staticmethod
-    def from_file(path: str, extra_roles: list[str] = []):
-        return Conversation.from_text(open(path).read(), extra_roles=extra_roles)
+    def from_file(path: str, extra_roles: list[str] = [], inherit = True):
+        # Is there something to inherit?
+        default_system = None
+        if os.path.exists(os.path.dirname(path) + "/base.txt") and inherit:
+            default_system = Conversation.from_file(os.path.dirname(path) + "/base.txt", inherit=False).get_system_content()
+        return Conversation.from_text(open(path).read(), extra_roles=extra_roles, default_system=default_system)
     @staticmethod
     def from_json(obj: dict):
         return Conversation([Message(**msg) for msg in obj["messages"]])
@@ -68,6 +78,9 @@ class Conversation:
         open(path, "w").write(self.to_text())
     def to_json(self):
         return {"messages": [msg.to_json() for msg in self.messages]}
+    
+    def get_system_content(self) -> Optional[str]:
+        return next((msg.content for msg in self.messages if msg.role == "system"), None)
 
 class Dataset:
     def __init__(self, conversations: list[Conversation] = []):
