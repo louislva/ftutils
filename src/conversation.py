@@ -58,12 +58,14 @@ class Conversation:
     @staticmethod
     def from_file(path: str, extra_roles: list[str] = []):
         return Conversation.from_text(open(path).read(), extra_roles=extra_roles)
-    
+    @staticmethod
+    def from_json(obj: dict):
+        return Conversation([Message(**msg) for msg in obj["messages"]])
+
     def to_text(self) -> str:
         return "".join([msg.to_text() for msg in self.messages])
     def to_file(self, path: str):
         open(path, "w").write(self.to_text())
-
     def to_json(self):
         return {"messages": [msg.to_json() for msg in self.messages]}
 
@@ -72,6 +74,11 @@ class Dataset:
         self.conversations = conversations
     def append(self, conversation: Conversation): self.conversations.append(conversation)
 
+    @staticmethod
+    def from_file(path: str):
+        lines = open(path).readlines()
+        return Dataset([Conversation.from_json(json.loads(line)) for line in lines])
+    
     def to_jsonl(self):
         return "\n".join([json.dumps(conversation.to_json()) for conversation in self.conversations])
     def to_file(self, path):
