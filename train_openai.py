@@ -23,12 +23,15 @@ if __name__ == '__main__':
 
     root_dir = os.path.dirname(__file__)
 
-    tokens = estimate_tokens(root_dir + "/" + args.train)
+    print()
+    print("Base model:", args.model)
+    tokens = estimate_tokens(root_dir + "/" + args.train) + (estimate_tokens(root_dir + "/" + args.eval) if args.eval is not None else 0)
     cost = tokens * (0.008 / 1000) * args.epochs
     print("Estimated Tokens (train):", tokens)
     print("Estimated Cost (train): $" + str(round(cost, 2)))
+    print()
 
-    confirmation = input("Do you want to run the training run? (y/N): ")
+    confirmation = input("Do you want to start the training run? (y/N): ")
     if confirmation.lower().strip() != 'y':
         print("Training run cancelled.")
         exit()
@@ -46,5 +49,5 @@ if __name__ == '__main__':
     print("Waiting for 30s...")
     time.sleep(30)
     print("Creating fine-tuning job...")
-    fine_tune = openai.fine_tuning.jobs.create(training_file=oa_file.id, validation_file=oa_file_eval, model=args.model, hyperparameters={"n_epochs": args.epochs})
+    fine_tune = openai.fine_tuning.jobs.create(training_file=oa_file.id, validation_file=oa_file_eval.id, model=args.model, hyperparameters={"n_epochs": args.epochs})
     print("Created fine tuning job:", fine_tune.id)
