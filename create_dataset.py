@@ -29,7 +29,9 @@ if __name__ == "__main__":
 
     # This is a way of randomly, but deterministically, splitting the conversations into train/eval sets
     # This means that even if you do a different combination of sources, or add more files, things will stay either in train or eval
-    keys = [float(int(hashlib.sha256(path.encode("utf-8")).hexdigest()[:4], 16) / (16 ** 4)) for path in paths]    
+    keys = [float(int(hashlib.sha256(
+        os.path.basename(path).encode('utf-8')
+    ).hexdigest()[:4], 16) / (16 ** 4)) for path in paths]    
     conversations_train = [convo for key, convo in zip(keys, conversations) if key > args.split]
     conversations_eval = [convo for key, convo in zip(keys, conversations) if key <= args.split]
     
