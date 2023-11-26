@@ -2,6 +2,7 @@ import argparse
 import os
 from src.conversation import Conversation, Dataset
 import random
+import hashlib
 
 def list_files(dir):
     r = []
@@ -24,14 +25,14 @@ if __name__ == "__main__":
     paths = []
     for input in args.input:
         paths.extend(list_files(f"{root_dir}/conversations/{input}"))
-
     conversations = [Conversation.from_file(path) for path in paths]
-    random.seed(420)
-    random.shuffle(conversations)
-    
-    conversations_train = conversations[int(len(conversations)*args.split):]
-    conversations_eval = conversations[:int(len(conversations)*args.split)]
 
+    # This is a way of randomly, but deterministically, splitting the conversations into train/eval sets
+    # This means that even if you do a different combination of sources, or add more files, things will stay either in train or eval
+    keys = [float(int(hashlib.sha256(path.encode("utf-8")).hexdigest()[:4], 16) / (16 ** 4)) for path in paths]    
+    conversations_train = [convo for key, convo in zip(keys, conversations) if key > args.split]
+    conversations_eval = [convo for key, convo in zip(keys, conversations) if key <= args.split]
+    
     dataset_train = Dataset(conversations_train)
     dataset_train.to_file(f"{root_dir}/datasets/{args.output}.train.jsonl")
     if len(conversations_eval) > 0:
