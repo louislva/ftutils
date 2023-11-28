@@ -6,6 +6,12 @@ import json
 import os
 client = OpenAI()
 
+DEFAULT_ROLES = ["user", "assistant", "system"]
+def get_role_regex(extra_roles=[]):
+    return re.compile("\n\n(" + "|".join(DEFAULT_ROLES + extra_roles) + "): ")
+def get_escaped_role_regex(extra_roles=[]):
+    return re.compile(r"\n\n\\(" + "|".join(DEFAULT_ROLES + extra_roles) + "): ")
+
 class Message:
     role: Literal["user", "assistant", "system"]
     content: str
@@ -17,16 +23,27 @@ class Message:
         self.name = name
 
     @staticmethod
+    def _unescape_roles_in_content(content):
+        # Replace e.g. \n\n\assistant: with \n\nassistant:
+        find = get_escaped_role_regex()
+        return find.sub(r"\n\n\g<1>: ",  content)
+    def _escape_roles_in_content(self):
+        # Replace e.g. \n\nassistant: with \n\n\\assistant:
+        find = get_role_regex()
+        return find.sub(r"\n\n\\\g<1>: ", self.content)
+
+    @staticmethod
     def from_text(text: str):
         role, content = text[2:].split(": ", 1)
+        unescaped_content = Message._unescape_roles_in_content(content)
         name = None
         if role not in ["user", "assistant", "system"]:
             name = role
             role = "user"
-        return Message(role=role, content=content, name=name)
-    
+        return Message(role=role, content=unescaped_content, name=name)
+
     def to_text(self) -> str:
-        return "\n\n" + (self.name or self.role) + ": " + self.content
+        return "\n\n" + (self.name or self.role) + ": " + self._escape_roles_in_content()
     
     def to_json(self) -> ChatCompletionMessage:
         obj = {}
@@ -43,7 +60,7 @@ class Conversation:
 
     @staticmethod
     def from_text(text: str, extra_roles: list[str] = [], default_system = None):
-        regex_start_message = re.compile("\n\n(" + "|".join(["user", "assistant", "system"] + extra_roles) + "): ")
+        regex_start_message = get_role_regex(extra_roles)
 
         # Find every message index, with the regex
         split_indicies = [0]
