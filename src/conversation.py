@@ -92,10 +92,10 @@ class Conversation:
     def to_text(self) -> str:
         return "".join([msg.to_text() for msg in self.messages])
     def to_file(self, path: str):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         open(path, "w").write(self.to_text())
     def to_json(self):
-        return {"messages": [msg.to_json() for msg in self.messages]}
-    
+        return [message.to_json() for message in self.messages]
     def get_system_content(self) -> Optional[str]:
         return next((msg.content for msg in self.messages if msg.role == "system"), None)
 
@@ -110,7 +110,7 @@ class Dataset:
         return Dataset([Conversation.from_json(json.loads(line)) for line in lines])
     
     def to_jsonl(self):
-        return "\n".join([json.dumps(conversation.to_json()) for conversation in self.conversations])
+        return "\n".join([json.dumps({"messages": conversation.to_json()}) for conversation in self.conversations])
     def to_file(self, path):
         open(path, "w").write(self.to_jsonl())
 
