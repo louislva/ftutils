@@ -90,8 +90,8 @@ class Conversation:
             default_system = Conversation.from_file(os.path.dirname(path) + "/base.txt", inherit=False).get_system_content()
         return Conversation.from_text(open(path).read(), extra_roles=extra_roles, default_system=default_system)
     @staticmethod
-    def from_json(obj: dict):
-        return Conversation([Message(**msg) for msg in obj["messages"]])
+    def from_json(messages: list[dict]):
+        return Conversation([Message(**msg) for msg in messages])
 
     def to_text(self) -> str:
         return "".join([msg.to_text() for msg in self.messages])
@@ -111,7 +111,7 @@ class Dataset:
     @staticmethod
     def from_file(path: str):
         lines = open(path).readlines()
-        return Dataset([Conversation.from_json(json.loads(line)) for line in lines])
+        return Dataset([Conversation.from_json(json.loads(line)["messages"]) for line in lines])
     
     def to_jsonl(self):
         return "\n".join([json.dumps({"messages": conversation.to_json()}) for conversation in self.conversations])
