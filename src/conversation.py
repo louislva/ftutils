@@ -23,19 +23,23 @@ class Message:
         self.name = name
 
     @staticmethod
-    def _unescape_roles_in_content(content):
-        # Replace e.g. \n\n\assistant: with \n\nassistant:
-        find = get_escaped_role_regex()
-        return find.sub(r"\n\n\g<1>: ",  content)
-    def _escape_roles_in_content(self):
-        # Replace e.g. \n\nassistant: with \n\n\\assistant:
-        find = get_role_regex()
-        return find.sub(r"\n\n\\\g<1>: ", self.content)
+    def _unescape_content(content):
+        # \n\n\assistant -> \n\nassistant
+        content = re.sub(get_escaped_role_regex(), r"\n\n\g<1>: ", content)
+        # \\ -> \
+        content = re.sub(r"\\\\", r"\\", content)
+        return content
+    def _escape_content(self):
+        # \ -> \\
+        content = re.sub(r"\\", r"\\\\", self.content)
+        # \n\nassistant -> \n\n\\assistant
+        content = re.sub(get_role_regex(), r"\n\n\\\g<1>: ", content)
+        return content
 
     @staticmethod
     def from_text(text: str):
         role, content = text[2:].split(": ", 1)
-        unescaped_content = Message._unescape_roles_in_content(content)
+        unescaped_content = Message._unescape_content(content)
         name = None
         if role not in ["user", "assistant", "system"]:
             name = role
@@ -43,7 +47,7 @@ class Message:
         return Message(role=role, content=unescaped_content, name=name)
 
     def to_text(self) -> str:
-        return "\n\n" + (self.name or self.role) + ": " + self._escape_roles_in_content()
+        return "\n\n" + (self.name or self.role) + ": " + self._escape_content()
     
     def to_json(self) -> ChatCompletionMessage:
         obj = {}
