@@ -93,14 +93,14 @@ class Conversation:
         return Conversation.from_text(open(path).read(), extra_roles=extra_roles, default_system=default_system)
     @staticmethod
     def from_json(messages: list[dict]):
-        return Conversation([Message(**msg) for msg in messages])
+        return Conversation([Message(role=msg["role"], content=msg["content"], name=(msg["name"] if "name" in msg else None)) for msg in messages])
 
     def to_text(self) -> str:
         self._ensure_message_class()
         return "".join([msg.to_text() for msg in self.messages])
     def to_file(self, path: str):
         self._ensure_message_class()
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.realpath(path)), exist_ok=True)
         open(path, "w").write(self.to_text())
     def to_json(self):
         self._ensure_message_class()
