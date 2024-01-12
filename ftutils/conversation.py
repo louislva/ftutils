@@ -1,10 +1,8 @@
-from openai import OpenAI
 from openai.types.chat import ChatCompletionMessage
 import re
 from typing import Literal, Optional
 import json
 import os
-client = OpenAI()
 
 DEFAULT_ROLES = ["user", "assistant", "system"]
 def get_role_regex(extra_roles=[]):
