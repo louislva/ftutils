@@ -26,6 +26,7 @@ class Message:
             return f"Message(role=\"{self.role}\", content=\"{content}\")"
         else:
             return f"Message(role=\"{self.role}\", name=\"{self.name}\", content=\"{content}\")"
+    def __repr__(self) -> str: return str(self)
 
     @staticmethod
     def _unescape_content(content):
