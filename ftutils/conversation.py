@@ -20,6 +20,13 @@ class Message:
         self.content = content
         self.name = name
 
+    def __str__(self) -> str:
+        content = content if len(content) < 32 else content[:32] + "..."
+        if self.name is None:
+            return f"Message(role=\"{self.role}\", content=\"{content}\")"
+        else:
+            return f"Message(role=\"{self.role}\", name=\"{self.name}\", content=\"{content}\")"
+
     @staticmethod
     def _unescape_content(content):
         # \n\n\assistant -> \n\nassistant
