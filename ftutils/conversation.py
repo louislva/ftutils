@@ -24,9 +24,9 @@ class Message:
         content = json.dumps(self.content)
         content = content if len(content) < 32 else content[:32] + "..."
         if self.name is None:
-            return f"Message(role=\"{self.role}\", content=\"{content}\")"
+            return f"Message(role=\"{self.role}\", content={content})"
         else:
-            return f"Message(role=\"{self.role}\", name=\"{self.name}\", content=\"{content}\")"
+            return f"Message(role=\"{self.role}\", name=\"{self.name}\", content={content})"
     def __repr__(self) -> str: return str(self)
 
     @staticmethod
