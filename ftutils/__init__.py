@@ -1,1 +1,1 @@
-from conversation import Conversation, Message, Dataset
+from ftutils.conversation import Conversation, Message, Dataset
