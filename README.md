@@ -1,6 +1,6 @@
 # ftutils
 
-Fine-tuning utilities for conversational language models.
+Minimalist toolkit for managing conversational datasets & fine-tuning LLMs.
 
 ## Installation
 
