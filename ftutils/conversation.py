@@ -4,6 +4,8 @@ from typing import Literal, Optional
 import json
 import os
 
+encoding = None
+
 DEFAULT_ROLES = ["user", "assistant", "system"]
 def get_role_regex(extra_roles=[]):
     return re.compile("\n\n(" + "|".join(DEFAULT_ROLES + extra_roles) + "): ")
@@ -19,6 +21,14 @@ class Message:
         self.role = role
         self.content = content
         self.name = name
+
+    @property
+    def tokens(self):
+        global encoding
+        if encoding is None:
+            import tiktoken
+            encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-instruct")
+        return 2 + len(encoding.encode(self.content))
 
     def __str__(self) -> str:
         content = self.content if len(self.content) < 32 else self.content[:32] + "..."
@@ -69,6 +79,9 @@ class Conversation:
     def __init__(self, messages: list[ChatCompletionMessage] = []) -> None:
         self.messages = messages
         self._ensure_message_class()
+
+    @property
+    def tokens(self): return sum(msg.tokens for msg in self.messages)
 
     def _ensure_message_class(self):
         self.messages = [Message(role=msg.role, content=msg.content, name=(msg.name if "name" in msg else None)) if not isinstance(msg, Message) else msg for msg in self.messages]
@@ -121,6 +134,10 @@ class Conversation:
 class Dataset:
     def __init__(self, conversations: list[Conversation] = []):
         self.conversations = conversations
+
+    @property
+    def tokens(self): return sum(conv.tokens for conv in self.conversations)
+
     def append(self, conversation: Conversation): self.conversations.append(conversation)
 
     @staticmethod

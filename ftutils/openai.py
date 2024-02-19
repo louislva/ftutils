@@ -13,33 +13,21 @@ def list_files(dir):
                 r.append(os.path.join(root, name))
     return r
 
-encoding = tiktoken.encoding_for_model("gpt-3.5-turbo-instruct")
-
-def estimate_tokens_message(message: Message):
-    return 2 + len(encoding.encode(message.content)) # proper way
-    # return 2 + int(len(message.content) / 4) # fast way
-
-def estimate_tokens_conversation(conversation: Conversation):
-    return sum(estimate_tokens_message(message) for message in conversation.messages)
-
-def estimate_tokens_dataset(dataset: Dataset):
-    return sum(estimate_tokens_conversation(conversation) for conversation in dataset.conversations)
-
 def estimate_tokens(param):
     if isinstance(param, str):
         if os.path.exists(param):
             if param.endswith(".jsonl"):
-                return estimate_tokens_dataset(Dataset.from_file(param))
+                return Dataset.from_file(param).tokens
             else:
-                return estimate_tokens_conversation(Conversation.from_file(param))
+                return Conversation.from_file(param).tokens
         else:
-            return estimate_tokens_conversation(Conversation.from_text(param))
+            return Conversation.from_text(param).tokens
     elif isinstance(param, Dataset):
-        return estimate_tokens_dataset(param)
+        return param.tokens
     elif isinstance(param, Conversation):
-        return estimate_tokens_conversation(param)
+        return param.tokens
     elif isinstance(param, Message):
-        return estimate_tokens_message(param)
+        return param.tokens
 
 def openai_start_finetune():
     parser = argparse.ArgumentParser(description="Start an OpenAI fine-tuning job.")
