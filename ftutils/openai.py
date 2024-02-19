@@ -30,7 +30,7 @@ def openai_start_finetune():
     parser.add_argument('-t', '--train', help='Train Dataset (JSONL format)', required=True)
     parser.add_argument('-e', '--eval', help='Eval Dataset (JSONL format)', required=False)
     parser.add_argument('-n', '--epochs', help='Number of epochs', default=3, type=int)
-    parser.add_argument('-m', '--model', help='Base model', default='gpt-3.5-turbo-1106', type=str)
+    parser.add_argument('-m', '--model', help='Base model', default='gpt-3.5-turbo-0613', type=str)
     args = parser.parse_args()
 
     root_dir = os.getcwd()
@@ -61,7 +61,7 @@ def openai_start_finetune():
     print("Waiting for 30s...")
     time.sleep(30)
     print("Creating fine-tuning job...")
-    fine_tune = openai.fine_tuning.jobs.create(training_file=oa_file.id, validation_file=oa_file_eval.id, model=args.model, hyperparameters={"n_epochs": args.epochs})
+    fine_tune = openai.fine_tuning.jobs.create(training_file=oa_file.id, validation_file=(oa_file_eval.id if oa_file_eval is not None else None), model=args.model, hyperparameters={"n_epochs": args.epochs})
     print("Created fine tuning job:", fine_tune.id)
 
 def openai_create_dataset():
